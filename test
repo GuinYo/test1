@@ -1,0 +1,67 @@
+$group = "Sec-NoPicture"
+
+$members = Get-ADGroupMember -Identity $group -Recursive | Select -ExpandProperty SamAccountName
+
+ 
+
+If ($members -contains $user) {
+
+      Write-Host "Fjerner medarbejder billede for $user"
+
+      Get-ADUser -Identity $user | Set-ADUser -Clear thumbnailphoto
+
+      Remove-UserPhoto -Identity $user -Confirm:$false
+
+} Else
+
+ 
+
+ 
+
+ {
+
+        Write-Host "Downloader medarbejder billede for $user"
+
+       
+
+$url = "https://xalfile.thg.dk/api/xalfile/Personnel/Photo/"
+
+$url2 = "https://xalfile.thg.dk/api/xalfile/Personnel/Photo/" + $user
+
+$url3 = "https://xalfile.thg.dk/api/xalfile/Personnel/Photo/sca"
+
+if ($url -contains $user) {
+
+$wc = New-Object System.Net.WebClient
+
+$picturepath = "C:\_thansen\picture\" +$user+ ".jpg"
+
+$wc.DownloadFile($url2,$picturepath )
+
+$photo = [byte[]](Get-Content $picturepath  -Encoding byte)           
+
+Write-Host "Indsætter medarbejder billede i AD'et"
+
+Set-ADUser $user -Replace @{thumbnailPhoto=$photo}
+
+Set-UserPhoto -Identity $user -Confirm:$false -PictureData ([System.IO.File]::ReadAllBytes("$picturepath"))
+
+} Else
+
+
+$wc = New-Object System.Net.WebClient
+
+$picturepath = "C:\_thansen\picture\" +$user+ ".jpg"
+
+$wc.DownloadFile($url3,$picturepath )
+
+$photo = [byte[]](Get-Content $picturepath  -Encoding byte)           
+
+Write-Host "Indsætter medarbejder billede i AD'et"
+
+Set-ADUser $user -Replace @{thumbnailPhoto=$photo}
+
+Set-UserPhoto -Identity $user -Confirm:$false -PictureData ([System.IO.File]::ReadAllBytes("$picturepath"))
+}
+
+ 
